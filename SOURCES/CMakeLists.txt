@@ -10,7 +10,7 @@ option(VEC_REPORT "Display compilation vectorization reports." OFF)
 set(PROJECT_NAME vertica-udfs)
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_FLAGS "-g -Wall -O3 -march=native -std=c++11 -Wno-unused-value -fPIC")
+set(CMAKE_CXX_FLAGS "-Wall -O3 -march=native -std=c++11 -Wno-unused-value -fPIC")
 
 if(VEC_REPORT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-all -ftree-vectorizer-verbose=7")
