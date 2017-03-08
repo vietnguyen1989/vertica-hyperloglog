@@ -31,7 +31,7 @@ For complete documentation, see the project home page on GitHub under http://git
 %setup -q # -c %{name}-%{version}
 
 %build
-%cmake -DSDK_HOME='/opt/vertica/sdk' -DBUILD_TESTS=ON /builddir/build/SOURCES
+%cmake -DSDK_HOME='/opt/vertica/sdk' -DBUILD_TESTS=ON -DBUILD_VERTICA_LIB=ON /builddir/build/SOURCES
 make %{?_smp_mflags}
 
 %install
