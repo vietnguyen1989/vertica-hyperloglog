@@ -19,7 +19,12 @@ LinearCounting::~LinearCounting() { delete[] bitmap; }
 
 LinearCounting::LinearCounting(const LinearCounting& other) : precision(other.precision) {
   bitmap = new uint8_t[bitmapSize()];
-  memcpy(bitmap, other.bitmap, 1 << (precision-3));
+#ifdef NO_MEMCPY
+  for(uint32_t i=0; i<bitmapSize(); ++i)
+    bitmap[i] = other.bitmap[i];
+#else
+  memcpy(bitmap, other.bitmap, bitmapSize());
+#endif
 }
 
 LinearCounting::LinearCounting(LinearCounting&& other) noexcept {

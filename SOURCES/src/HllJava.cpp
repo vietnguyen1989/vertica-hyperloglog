@@ -1,7 +1,5 @@
 #include "hll.hpp"
 
-asm (".symver memcpy, memcpy@GLIBC_2.2.5");
-
 auto format = Format::COMPACT_6BITS;
 
 extern "C" void init(char* arr) {

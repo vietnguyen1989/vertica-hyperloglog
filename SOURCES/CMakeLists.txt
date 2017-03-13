@@ -19,7 +19,7 @@ option(BUILD_TESTS "Build all tests." OFF)
 ##  COMPILE FLAGS  ##
 #####################
 
-set(CMAKE_CXX_FLAGS "-Wall -O3 -std=c++11 -Wno-unused-value -fPIC")
+set(CMAKE_CXX_FLAGS "-Wall -O3 -std=c++11 -Wno-unused-value")
 
 set(VERTICA_INCLUDE ${SDK_HOME}/include)
 include_directories(${VERTICA_INCLUDE} include src)
@@ -55,6 +55,16 @@ endif()
 
 if (BUILD_HIVE_LIB)
   set(SOURCES src/bias_corrected_estimate.cpp src/linear_counting.cpp src/hll.hpp src/hll_raw.hpp src/HllJava.cpp)
+  # define this macro to compile the code without any call to glib's memcpy. This is to avoid troubles when using
+  # HLL's code through JNA. We will make use of this macro in the following way:
+  # #ifdef NO_MEMCPY
+  #     for(uint32_t i=0; i<numberOfBuckets; ++i) {
+  #         synopsis[i] = other.synopsis[i];
+  #     }
+  # #else
+  #     memcpy(synopsis, other.synopsis, numberOfBuckets);
+  # #endif
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_MEMCPY")
   add_library(hllhive SHARED ${SOURCES})
 endif()
 

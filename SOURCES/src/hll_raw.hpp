@@ -115,7 +115,13 @@ public:
     bucketBits(other.bucketBits),
     valueBits(other.valueBits),
     synopsis(new uint8_t[other.numberOfBuckets]) {
+#ifdef NO_MEMCPY
+    for(uint32_t i=0; i<numberOfBuckets; ++i) {
+      synopsis[i] = other.synopsis[i];
+    }
+#else
     memcpy(synopsis, other.synopsis, numberOfBuckets);
+#endif
   }
 
   /** Move constructor */

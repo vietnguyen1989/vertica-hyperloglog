@@ -94,7 +94,12 @@ public:
     // serialize the header as well
     hdr.bucketBase = base;
     hdr.format = formatToCode(format);
+#ifdef NO_MEMCPY
+    HLLHdr* byteArrayHdr = reinterpret_cast<HLLHdr*>(byteArray);
+    *byteArrayHdr = hdr;
+#else
     memcpy(byteArray, reinterpret_cast<char*>(&hdr), sizeof(HLLHdr));
+#endif
   }
 
   void add(const Hll& other) {
