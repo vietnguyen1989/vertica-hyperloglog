@@ -17,24 +17,15 @@ class HllDistinctCount : public AggregateFunction
 
     virtual void initAggregate(ServerInterface &srvInterface, IntermediateAggs &aggs)
     {
-        ParamReader paramReader= srvInterface.getParamReader();
-        if (paramReader.containsParameter(HLL_ARRAY_SIZE_PARAMETER_NAME) )
-          hllLeadingBits = paramReader.getIntRef(HLL_ARRAY_SIZE_PARAMETER_NAME);
-        else
-          hllLeadingBits = HLL_ARRAY_SIZE_DEFAULT_VALUE;
-
-        if(paramReader.containsParameter(HLL_BITS_PER_BUCKET_PARAMETER_NAME))
-          this->format = formatCodeToEnum(paramReader.getIntRef(HLL_BITS_PER_BUCKET_PARAMETER_NAME));
-        else
-          this->format = formatCodeToEnum(HLL_BITS_PER_BUCKET_DEFAULT_VALUE);
-
-        HLL initialHll(hllLeadingBits);
-        this -> synopsisSize = initialHll.getSynopsisSize(format);
-        try {
-          initialHll.serialize(aggs.getStringRef(0).data(), format);
-        } catch(SerializationError& e) {
-          vt_report_error(0, e.what());
-        }
+      this -> hllLeadingBits = readSubStreamBits(srvInterface);
+      this -> format = readSerializationFormat(srvInterface);
+      HLL initialHll(hllLeadingBits);
+      this -> synopsisSize = initialHll.getSynopsisSize(format);
+      try {
+        initialHll.serialize(aggs.getStringRef(0).data(), format);
+      } catch(SerializationError& e) {
+        vt_report_error(0, e.what());
+      }
     }
 
     void aggregate(ServerInterface &srvInterface,
