@@ -5,10 +5,10 @@
 #include "Vertica.h"
 
 #define HLL_ARRAY_SIZE_PARAMETER_NAME "hllLeadingBits"
-#define HLL_ARRAY_SIZE_DEFAULT_VALUE 4
+#define HLL_ARRAY_SIZE_DEFAULT_VALUE 12
 
 #define HLL_BITS_PER_BUCKET_PARAMETER_NAME "bitsPerBucket"
-#define HLL_BITS_PER_BUCKET_DEFAULT_VALUE 4
+#define HLL_BITS_PER_BUCKET_DEFAULT_VALUE 6
 
 using namespace Vertica;
 using HLL = Hll<uint64_t>;
