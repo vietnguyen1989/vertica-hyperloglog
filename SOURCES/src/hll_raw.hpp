@@ -115,7 +115,7 @@ public:
     bucketBits(other.bucketBits),
     valueBits(other.valueBits),
     synopsis(new uint8_t[other.numberOfBuckets]) {
-#ifdef NO_MEMCPY
+#ifdef HIVE_BUILD 
     for(uint32_t i=0; i<numberOfBuckets; ++i) {
       synopsis[i] = other.synopsis[i];
     }

@@ -4,6 +4,9 @@
 #include <vector>
 #include "bias_corrected_estimate.hpp"
 
+#ifdef HIVE_BUILD
+asm (".symver memcpy, memcpy@GLIBC_2.2.5");
+#endif
 
 /**
  * Like in the Google paper we use a 6-neighbours interpolation. The algorithm goes as follows:
@@ -18,7 +21,7 @@ double BiasCorrectedEstimate::kNeighborsInterpolationBias(uint64_t rawEstimate, 
 
   // lower_bound returns an iterator pointing to the first element that is not smaller
   auto lower = std::lower_bound(rawEstimates.begin(), rawEstimates.end(), rawEstimate);
-  // lowerBoundIdx keep index of the
+  // lowerBoundIdx keeps the index of the lower bound element
   auto lowerBoundIdx = lower-rawEstimates.begin();
 
   // in this vector we put neighbors from left and right

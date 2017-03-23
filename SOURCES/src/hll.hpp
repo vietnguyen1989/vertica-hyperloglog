@@ -14,7 +14,7 @@ struct HLLHdr {
 
 
 struct SerializationError : public virtual std::runtime_error {
-  SerializationError(const char* message) : std::runtime_error(message) {}
+  SerializationError(const char* message) : std::runtime_error(std::string(message)) {}
 };
 
 
@@ -94,7 +94,7 @@ public:
     // serialize the header as well
     hdr.bucketBase = base;
     hdr.format = formatToCode(format);
-#ifdef NO_MEMCPY
+#ifdef HIVE_BUILD 
     HLLHdr* byteArrayHdr = reinterpret_cast<HLLHdr*>(byteArray);
     *byteArrayHdr = hdr;
 #else
