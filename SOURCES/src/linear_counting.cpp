@@ -50,8 +50,8 @@ uint32_t LinearCounting::bitmapSize() const {
 }
 
 uint32_t LinearCounting::getBits(uint64_t hashValue) const {
-  return static_cast<uint32_t>(hashValue >> (64 - precision)); 
-} 
+  return static_cast<uint32_t>(hashValue >> (64 - precision));
+}
 
 /**
  * Count unset bits in the bitmap. To make it faster we convert the array
@@ -67,7 +67,7 @@ uint32_t LinearCounting::countUnsetBits() const {
     // __builtin_popcountll counts number of set bits so we have to invert the table bitwise
     // NOTE: there is no set-bit counterpart of popcount
     count += __builtin_popcountll(~(*ptr));
-  } 
+  }
   return count;
 }
 
@@ -98,17 +98,17 @@ uint64_t LinearCounting::getLinearCountingThreshold(uint8_t hllPrecision) {
  * where:
  *   m is size of the bitmap
  *   S is number of unset bits (i.e. whose value =0)
- *   
+ *
  */
 uint64_t LinearCounting::estimate() const {
   uint32_t unsetBits = countUnsetBits();
-  uint32_t bitsInBitmap = 1 << precision; 
+  uint32_t bitsInBitmap = 1 << precision;
   return bitsInBitmap * log(static_cast<double>(bitsInBitmap) / static_cast<double>(unsetBits));
 }
 
-/** 
+/**
  * These values come from the Google paper appendix. Based on this array one can tell when
- * LinearCounting ought to be applied. For instance, if precision is 10 (i.e. 10 bits are used 
+ * LinearCounting ought to be applied. For instance, if precision is 10 (i.e. 10 bits are used
  * to choose the bucket), then array[10-4] = array[6] = 900. This means, that if the Bias-corrected
  * cardinality is below 900, LinearCounting's estimate should be used instead of the HLL's one.
  *

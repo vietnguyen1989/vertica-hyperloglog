@@ -186,7 +186,7 @@ TEST_F(HllRawTest, TestErrorWithinRangeForDifferentBucketMasks) {
      * 1.04/sqrt(m)
      */
     double expected_error = 1.04/std::sqrt(m);
-    double real_error = std::abs(real_cardinality-approximated_cardinality)/real_cardinality;
+    double real_error = std::fabs(real_cardinality-approximated_cardinality)/real_cardinality;
 
     EXPECT_LT(real_error, expected_error*error_tolerance);
   }

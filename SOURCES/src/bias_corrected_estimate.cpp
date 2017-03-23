@@ -18,16 +18,16 @@ double BiasCorrectedEstimate::kNeighborsInterpolationBias(uint64_t rawEstimate, 
 
   // lower_bound returns an iterator pointing to the first element that is not smaller
   auto lower = std::lower_bound(rawEstimates.begin(), rawEstimates.end(), rawEstimate);
-  // lowerBoundIdx keep index of the 
+  // lowerBoundIdx keep index of the
   auto lowerBoundIdx = lower-rawEstimates.begin();
 
   // in this vector we put neighbors from left and right
   // and then we sort them by the distance from rawEstimate
   std::vector<std::pair<uint32_t, double>> neighbors;
   for(uint32_t idx = lowerBoundIdx; idx < lowerBoundIdx+6; ++idx)
-    neighbors.push_back(std::make_pair(idx, std::abs(rawEstimates[idx]-rawEstimate)));
+    neighbors.push_back(std::make_pair(idx, std::fabs(rawEstimates[idx]-rawEstimate)));
   for(int32_t idx = lowerBoundIdx-1; idx >= 0 && idx >= lowerBoundIdx-6; --idx) {
-    neighbors.push_back(std::make_pair(idx, std::abs(rawEstimates[idx]-rawEstimate)));
+    neighbors.push_back(std::make_pair(idx, std::fabs(rawEstimates[idx]-rawEstimate)));
   }
 
   // sort pairs (idx, distanceFromHllEstimate) according to the second value
@@ -38,7 +38,7 @@ double BiasCorrectedEstimate::kNeighborsInterpolationBias(uint64_t rawEstimate, 
 
   double mean = .0;
 
-  // sum up biases for 6 closest neighbors 
+  // sum up biases for 6 closest neighbors
   for(uint32_t idx = 0; idx < 6; ++idx) {
     auto neighborIdx = neighbors[idx].first;
     mean += biases[neighborIdx];
@@ -48,10 +48,10 @@ double BiasCorrectedEstimate::kNeighborsInterpolationBias(uint64_t rawEstimate, 
 }
 
 
-/** 
+/**
  * This function yields a bias-corrected estimate based on raw HLL estimate.
  * This is achieved by subtracting bias as measured by the Google guys
- * 
+ *
  * See: https://docs.google.com/document/d/1gyjfMHy43U9OWBXxfaeG-3MjGzejW1dlpyMwEYAAWEI/
  */
 uint64_t BiasCorrectedEstimate::estimate(uint64_t rawEstimate, uint8_t precision) {
