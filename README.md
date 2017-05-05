@@ -31,10 +31,10 @@ Imagine that we bake cookies :cookie: A lot of them. We have a log like this whe
 
 timestamp|factory_name|cookie_name
 ---------|------------|-----------
-2016-04-02T12:23:24 | Paris	| Chocolate Chip
-2016-04-02T12:23:32	| New York | Peanut Butter and Oatmeal
-2016-04-02T12:23:56 | Paris	| Caramel Chip
-...	| ... | ...
+2016-04-02T12:23:24 | Paris | Chocolate Chip
+2016-04-02T12:23:32 | New York | Peanut Butter and Oatmeal
+2016-04-02T12:23:56 | Paris | Caramel Chip
+... | ... | ...
 
 We want to provide distinct count of cookies by factory or any grain of timestamps above a day in a table that does not have the cookie_name column. Instead, we keep an aggregation of that column as follows:
 
@@ -117,7 +117,7 @@ LinearCounting is a different cardinality estimator that uses a bitmap of N bits
 
 The formula is defined as follows:
 
-	E = U * log(m/U)
+    E = U * log(m/U)
 
 where:
 
@@ -199,20 +199,56 @@ Byte 0   Byte 1
 
 ## Using HyperLogLog in Vertica
 
-This repository contains implementation of two User Defined Aggregation Functions in Vertica: `HllCreateSynopsis` and `HllDistinctCount`. The former is used to aggregate input data and creates a synopsis in the format described above. These synopsis can be further aggregated to summarize unions of two or more data sets. The latter function, HllDistinctCount, is used to compute an equivalent of an SQL DISTINCT COUNT statement from the outcome of HllCreateSynopsis.
+This repository contains implementation of three User Defined Aggregation Functions in Vertica:
+- `HllCreateSynopsis` is used to aggregate input data and create a synopsis in the format described above. This synopsis can be further used either to calculate cardinality or to aggregate over more dimensions using `HllCombine`
+- `HllDistinctCount` is used to compute an equivalent of an `SQL DISTINCT COUNT` statement from a synopsis, i.e. from the outcome of `HllCreateSynopsis` or `HllCombine`.
+- `HllCombine` is used to combine many synopses into one synopsis. It might be used to introduce intermediary stages of aggregation, e.g.
+```SQL;
+CREATE TABLE user_count_synopsis
+AS
+SELECT
+  client_id,
+  HllCombine(synopsis USING PARAMETERS hllLeadingBits=14) AS synopsis
+FROM (
+    SELECT 
+        client_id,
+        dim1,
+        dim2,
+        HllCreateSynopsis(uid USING PARAMETERS hllLeadingBits=14) as synopsis
+    FROM
+        test_schema.fact_clicks
+    WHERE
+        client_id > 1000 AND client_id < 1050
+    GROUP BY
+        client_id,
+        dim1,
+        dim2,
+    ) as s
+GROUP BY
+  client_id;
 
-Both HllDistinctCount and HllCreateSynopsis expect two parameters:
 
-  name | possible values | description
-  -----|-----------------|------------
-  hllLeadingBits | 1...16 | Number of bits used cut off from each hash value used to specify which buckets a number falls into. This parameter is inherent to the HyperLogLog algorithm. In general the higher it is, the more accurate is the HLL's estimate. Importantly, synopsis' size is exponentially proportional to this value.
-  bitsPerBucket | 4,5,6,8 | Number of bits used to put serialize synopsis in HllCreateSynopsis. Synopsis' size is proportional to this value. While bitsPerBucket={6,8} won't impact accuracy, when the value is set to 4 or 5, the accuracy might be effected, although this behaviour is unlikely. 
+SELECT
+  client_id,
+  HllDistinctCount(synopsis USING PARAMETERS hllLeadingBits=14)
+FROM
+  user_count_synopsis
+GROUP BY
+  client_id;
+```
+
+All the functions expect two parameters:
+
+  name | possible values | default value | description
+  -----|-----------------|---------------|------------
+  hllLeadingBits | 1...16 | 12 | Number of bits used cut off from each hash value used to specify which buckets a number falls into. This parameter is inherent to the HyperLogLog algorithm. In general the higher it is, the more accurate is the HLL's estimate. Importantly, synopsis' size is exponentially proportional to this value.
+  bitsPerBucket | 4,5,6,8 | 6 | Number of bits used to put serialize synopsis in HllCreateSynopsis. Synopsis' size is proportional to this value. While bitsPerBucket={6,8} won't impact accuracy, when the value is set to 4 or 5, the accuracy might be effected, although this behaviour is unlikely. 
 
   **It is worthwhile to note that the smaller the synopsis is, the faster the algorithm will be**. For precise numbers please refer to the `Latency and accuracy benchmarks` section below. 
 
-From the Vertica's point of view a synopsis is just a VARBINARY. Its size depends on the number of precision bits and compactness (number of bits per bucket) and is fixed for these two parameters, i.e. no matter what the stored cardinality is, the synopsis will have constant size. The table below characterizes synopsis size for different values of parameters. In the rows there are different supported compactness values. In the columns there are various precision sizes (i.e. binary logarithm of number of buckets). Please note that the highest supported precision is 16 bits.
+From the Vertica's point of view a synopsis is just a `VARBINARY`. Its size depends on the number of precision bits and compactness (number of bits per bucket) and is fixed for these two parameters, i.e. no matter what the stored cardinality is, the synopsis will have constant size. The table below characterizes synopsis size for different values of parameters. In the rows there are different supported compactness values. In the columns there are various precision sizes (i.e. binary logarithm of number of buckets). Please note that the highest supported precision is 16 bits.
 
-**These parameters have to be the same for calls of HllCreateSynopsis and HllDistinctCount. Otherwise Vertica might crash or the output might be garbage**
+**Parameter values have to be chosen at synopsis creation. Once a synopsis is created, one has to use the same values for all the UDF calls. Otherwise Vertica might crash or the output might be garbage**
 
 | | p=10 | p=11 | p=12 | p=13 | p=14 | p=15
 --------|------|------|------|------|------|-----
@@ -240,11 +276,15 @@ DROP LIBRARY libhll CASCADE;
 CREATE LIBRARY libhll AS '/path/to/libhll.so';
 CREATE AGGREGATE FUNCTION HllCreateSynopsis AS LANGUAGE 'C++' NAME 'HllCreateSynopsisFactory' LIBRARY libhll;
 CREATE AGGREGATE FUNCTION HllDistinctCount AS LANGUAGE 'C++' NAME 'HllDistinctCountFactory' LIBRARY libhll;
+CREATE AGGREGATE FUNCTION HllCombine AS LANGUAGE 'C++' NAME 'HllDistinctCountFactory' LIBRARY libhll;
+GRANT EXECUTE ON AGGREGATE FUNCTION HllCreateSynopsis(BIGINT) TO PUBLIC;
+GRANT EXECUTE ON AGGREGATE FUNCTION HllDistinctCount(VARBINARY) TO PUBLIC;
+GRANT EXECUTE ON AGGREGATE FUNCTION HllCombine(VARBINARY) TO PUBLIC;
 ```
 
-### Computing DISTINCT COUNT
+### Computing `DISTINCT COUNT`
 
-Computation of DISTINCT COUNT using this HyperLogLog UDF constists of two steps. First we first have to aggregate some data and create a synopsis:
+Computation of `DISTINCT COUNT` using this HyperLogLog UDF constists of at least two steps. First we first have to aggregate some data and create a synopsis:
 
 ```SQL
 DROP TABLE test_schema.agg_clicks;
