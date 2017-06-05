@@ -9,6 +9,7 @@ project(${PROJECT_NAME})
 #####################
 
 option(VEC_REPORT "Display compilation vectorization reports." OFF)
+option(DEBUG_BUILD "Attach debug information to the executables." OFF)
 option(BUILD_VERTICA_LIB "Build the .so library with UDFs for Vertica" OFF)
 option(BUILD_HIVE_LIB "Build the .so library with Hive-friendly interface" OFF)
 option(BUILD_VERTICA_TEST_DRIVER "Build a test program to show basic functionality of the underlying HLL algorithm" OFF)
@@ -23,6 +24,10 @@ set(CMAKE_CXX_FLAGS "-Wall -O3 -std=c++11 -Wno-unused-value")
 
 set(VERTICA_INCLUDE ${SDK_HOME}/include)
 include_directories(${VERTICA_INCLUDE} include src)
+
+if(DEBUG_BUILD)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif()
 
 if(VEC_REPORT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-all -ftree-vectorizer-verbose=7")
