@@ -11,7 +11,7 @@
  * to set a bit in the bitmap.
  *
  * Eventually, the ratio of set to all bits is used to estimate cardinality
- * of the measured set. 
+ * of the measured set.
  */
 class LinearCounting {
 private:

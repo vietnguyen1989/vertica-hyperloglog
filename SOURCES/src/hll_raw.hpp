@@ -102,7 +102,7 @@ public:
    *
    * See: https://en.wikipedia.org/wiki/Rule_of_three_(C%2B%2B_programming)
    */
-  HllRaw(uint8_t bucketBits) { 
+  HllRaw(uint8_t bucketBits) {
     init(bucketBits);
     memset( synopsis, 0, numberOfBuckets );
   }
@@ -115,7 +115,7 @@ public:
     bucketBits(other.bucketBits),
     valueBits(other.valueBits),
     synopsis(new uint8_t[other.numberOfBuckets]) {
-#ifdef HIVE_BUILD 
+#ifdef HIVE_BUILD
     for(uint32_t i=0; i<numberOfBuckets; ++i) {
       synopsis[i] = other.synopsis[i];
     }
@@ -176,7 +176,7 @@ public:
 
   void add(const HllRaw<T>& other) {
     assert(this->numberOfBuckets == other.numberOfBuckets);
-    this->add(other.synopsis); 
+    this->add(other.synopsis);
   }
 
   uint8_t getBucketBits() const {
@@ -370,7 +370,7 @@ public:
       synopsis_[bgidx*8+5] = base +  ((byteArray[bgidx*5+3] & 0x7C) >> 2);
       synopsis_[bgidx*8+6] = base + (((byteArray[bgidx*5+3] & 0x03) << 3) | (byteArray[bgidx*5+4] >> 5));
       synopsis_[bgidx*8+7] = base +   (byteArray[bgidx*5+4] & 0x1F);
-    }   
+    }
   }
 
   uint8_t serialize5BitsWithBase(char* byteArray1) const {
@@ -392,7 +392,7 @@ public:
         buckets[bidx] = normBucket > maxValIn5Bits ? maxValIn5Bits : normBucket;
       }
       byteArray[bgidx*5]   = (buckets[0] << 3) | (buckets[1] >> 2);
-      byteArray[bgidx*5+1] = (buckets[1] << 6) | (buckets[2] << 1) | (buckets[3] >> 4); 
+      byteArray[bgidx*5+1] = (buckets[1] << 6) | (buckets[2] << 1) | (buckets[3] >> 4);
       byteArray[bgidx*5+2] = (buckets[3] << 4) | (buckets[4] >> 1);
       byteArray[bgidx*5+3] = (buckets[4] << 7) | (buckets[5] << 2) | (buckets[6] >> 3);
       byteArray[bgidx*5+4] = (buckets[6] << 5) | (buckets[7]);
@@ -425,7 +425,7 @@ public:
 
     const uint8_t maxValIn4Bits = ((1<<4)-1); // max value fitting 4 bits
     // we iterate over pairs of buckets
-    
+
     uint8_t* __restrict__ synopsis_ = synopsis;
     const uint32_t numberOfBucketsConst = getNumberOfBuckets();
 

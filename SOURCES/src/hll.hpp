@@ -37,10 +37,10 @@ class Hll {
   }
 
 public:
-  Hll(uint8_t bucketBits, uint8_t lcBits) : 
+  Hll(uint8_t bucketBits, uint8_t lcBits) :
       hll(bucketBits),
       linearCounting(lcBits) {
-    // Google's paper suggests to set the threshold to this value 
+    // Google's paper suggests to set the threshold to this value
    this -> biasCorrectedThreshold = hll.getNumberOfBuckets()*5;
    this -> lcThreshold = linearCounting.getLinearCountingThreshold(bucketBits);
   }
@@ -94,7 +94,7 @@ public:
     // serialize the header as well
     hdr.bucketBase = base;
     hdr.format = formatToCode(format);
-#ifdef HIVE_BUILD 
+#ifdef HIVE_BUILD
     HLLHdr* byteArrayHdr = reinterpret_cast<HLLHdr*>(byteArray);
     *byteArrayHdr = hdr;
 #else
@@ -103,7 +103,7 @@ public:
   }
 
   void add(const Hll& other) {
-    this->hll.add(other.hll); 
+    this->hll.add(other.hll);
   }
 
   void add(T value) {
@@ -118,7 +118,7 @@ public:
 /**
  * Hll's error becomes significant for small cardinalities. For instance, when
  * the cardinality is 0, HLL(p=14) estimates it to ~11k.
- * To circumvent 
+ * To circumvent
  */
   uint64_t approximateCountDistinct() {
     uint64_t e = this->hll.estimate();

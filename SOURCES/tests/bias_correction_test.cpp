@@ -19,7 +19,7 @@ class BiasCorrectionTest : public HllBaseTest {
   const uint8_t MIN_SUPPORTED_PRECISION = 6;
   const uint8_t MAX_SUPPORTED_PRECISION = 18;
 
-  BiasCorrectionTest() : HllBaseTest("bias_correction.dat"), 
+  BiasCorrectionTest() : HllBaseTest("bias_correction.dat"),
     data_file{getInputPath(), std::ifstream::in} {}
 
   virtual ~BiasCorrectionTest() {
@@ -39,7 +39,7 @@ class BiasCorrectionTest : public HllBaseTest {
 };
 
 /**
- * This test is to check that the Bias Correction algorithm works well for the raw HLL estimates 
+ * This test is to check that the Bias Correction algorithm works well for the raw HLL estimates
  */
 
 TEST_F(BiasCorrectionTest, TestBiasCorrectionNearZero) {

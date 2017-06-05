@@ -19,7 +19,7 @@ LinearCounting::~LinearCounting() { delete[] bitmap; }
 
 LinearCounting::LinearCounting(const LinearCounting& other) : precision(other.precision) {
   bitmap = new uint8_t[bitmapSize()];
-#ifdef HIVE_BUILD 
+#ifdef HIVE_BUILD
   for(uint32_t i=0; i<bitmapSize(); ++i)
     bitmap[i] = other.bitmap[i];
 #else
@@ -81,7 +81,7 @@ void LinearCounting::setBit(uint32_t bitIdx) {
 * NOTE: This function expects a hash value and not a real value.
 */
 void LinearCounting::add(uint64_t hashValue) {
-  uint32_t relevantBits = static_cast<uint32_t>(hashValue >> (64 - precision)); 
+  uint32_t relevantBits = static_cast<uint32_t>(hashValue >> (64 - precision));
   setBit(relevantBits);
 }
 

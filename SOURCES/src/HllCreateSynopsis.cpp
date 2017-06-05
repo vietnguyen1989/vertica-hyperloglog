@@ -20,7 +20,7 @@ class HllCreateSynopsis : public AggregateFunction
     virtual void initAggregate(ServerInterface &srvInterface, IntermediateAggs &aggs)
     {
       this -> hllLeadingBits = readSubStreamBits(srvInterface);
-      this -> format = readSerializationFormat(srvInterface); 
+      this -> format = readSerializationFormat(srvInterface);
       HLL initialHll(hllLeadingBits);
       this -> synopsisSize = initialHll.getSynopsisSize(format);
       try {
