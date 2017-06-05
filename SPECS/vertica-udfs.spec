@@ -1,5 +1,5 @@
 Name:           vertica-udfs
-Version:        0.4
+Version:        0.5
 Release:        1%{?dist}
 Summary:        HyperLogLog UDF for Vertica
 

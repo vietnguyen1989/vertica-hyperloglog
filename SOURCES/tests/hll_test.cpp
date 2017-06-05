@@ -37,6 +37,7 @@ class HllTest : public HllBaseTest {
 
 };
 
+
 /**
  *                **************
  *                *** 6 BITS ***
