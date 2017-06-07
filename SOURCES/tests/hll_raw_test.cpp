@@ -73,7 +73,7 @@ TEST_F(HllRawTest, TestSerializeDeserialize6Bits) {
   for(uint64_t id; data_file >> id;) {
     hll.add(id);
   }
-  uint32_t length = hll.getSynopsisSize(Format::COMPACT_6BITS);
+  uint32_t length = hll.getSerializedSynopsisSize(Format::COMPACT_6BITS);
 
   std::unique_ptr<char[]> byte_array(new char[length]);
   hll.serialize6Bits(byte_array.get());
@@ -103,7 +103,7 @@ TEST_F(HllRawTest, TestSerializeDeserialize6BitsToFile) {
     hll.add(id);
   }
 
-  uint32_t length = hll.getSynopsisSize(Format::COMPACT_6BITS);
+  uint32_t length = hll.getSerializedSynopsisSize(Format::COMPACT_6BITS);
   std::unique_ptr<char[]> byte_array(new char[length]);
   hll.serialize6Bits(byte_array.get());
   std::ofstream temp_file_out("tmp", std::ios::binary | std::ios::out);
@@ -217,10 +217,10 @@ TEST_F(HllRawTest, TestDummyHashFunction) {
 TEST_F(HllRawTest, TestNonStandardSynopsisSize) {
   for(uint8_t precision=4; precision<=18; ++precision) {
     HllRaw<uint64_t> hll(precision);
-    ASSERT_EQ(hll.getSynopsisSize(Format::NORMAL), 1<<precision);
+    ASSERT_EQ(hll.getSerializedSynopsisSize(Format::NORMAL), 1<<precision);
     // 6 bit format is expected to go down by 3/4
     // since 8 bits become 6
-    ASSERT_EQ(hll.getSynopsisSize(Format::COMPACT_6BITS), (1<<precision)*3/4);
+    ASSERT_EQ(hll.getSerializedSynopsisSize(Format::COMPACT_6BITS), (1<<precision)*3/4);
   }
 }
 

@@ -45,6 +45,8 @@ private:
   uint8_t valueBits;
   uint8_t* synopsis;
 
+  bool deleteSynopsis;
+
   uint8_t leftMostSetBit(uint64_t hash) const {
     // We set the bucket bits to 0
     if (hash == 0)
@@ -58,12 +60,14 @@ private:
       return (uint8_t)__builtin_clzll(hash & valueMask) + 1 - bucketBits;
   }
 
+  static uint64_t countNumberOfBuckets(uint8_t precision) {
+    return 1UL << precision;
+  }
 
-
-  void init(uint8_t bucketBits) {
+  void init(uint8_t bucketBits, uint8_t* synopsis = nullptr) {
     this -> bucketBits = bucketBits;
     this -> valueBits = 64 - bucketBits;
-    this -> numberOfBuckets = 1UL << bucketBits;
+    this -> numberOfBuckets = countNumberOfBuckets(bucketBits);
 
 
     // Ex: with a 4 bits bucket on a 2 bytes size_t we want 1111 0000 0000 0000
@@ -77,7 +81,13 @@ private:
     /**
      * No matter what the serialization method is, we store the buckets as an array of bytes.
      */
-    this -> synopsis = new uint8_t[numberOfBuckets];
+    if (synopsis == nullptr) {
+      this -> synopsis = new uint8_t[this->getDeserializedSynopsisSize()];
+      this -> deleteSynopsis = true;
+    } else {
+      this -> synopsis = synopsis;
+      this -> deleteSynopsis = false;
+    }
   }
 public:
 
@@ -102,9 +112,9 @@ public:
    *
    * See: https://en.wikipedia.org/wiki/Rule_of_three_(C%2B%2B_programming)
    */
-  HllRaw(uint8_t bucketBits) {
-    init(bucketBits);
-    memset( synopsis, 0, numberOfBuckets );
+  HllRaw(uint8_t bucketBits, uint8_t* synopsis = nullptr) {
+    init(bucketBits, synopsis);
+    memset( this->synopsis, 0, numberOfBuckets );
   }
 
 
@@ -114,7 +124,8 @@ public:
     valueMask(other.valueMask),
     bucketBits(other.bucketBits),
     valueBits(other.valueBits),
-    synopsis(new uint8_t[other.numberOfBuckets]) {
+    synopsis(new uint8_t[other.numberOfBuckets]),
+    deleteSynopsis(true) {
 #ifdef HIVE_BUILD
     for(uint32_t i=0; i<numberOfBuckets; ++i) {
       synopsis[i] = other.synopsis[i];
@@ -145,14 +156,15 @@ public:
 
   /** Move assignment operator */
   HllRaw& operator=(HllRaw&& other) noexcept {
-    delete[] synopsis;
     synopsis = other.synopsis;
+    deleteSynopsis = other.deleteSynopsis;
     other.synopsis = nullptr;
     return *this;
   }
 
   ~HllRaw() {
-    delete[] synopsis;
+    if(deleteSynopsis)
+      delete[] synopsis;
   }
 
   void add(T value) {
@@ -191,8 +203,25 @@ public:
     return this -> numberOfBuckets;
   }
 
-  uint32_t getSynopsisSize(Format format) {
-    uint32_t ret = 0;
+  uint64_t getDeserializedSynopsisSize() {
+    return HllRaw<T,H>::countNumberOfBuckets(bucketBits);
+  }
+
+  static uint64_t getDeserializedSynopsisSize(uint8_t precision) {
+    return HllRaw<T,H>::countNumberOfBuckets(precision);
+  }
+
+  uint64_t getSerializedSynopsisSize(Format format) {
+    return HllRaw<T,H>::getSerializedSynopsisSize(format, bucketBits);
+  }
+
+  static uint64_t getSerializedSynopsisSize(Format format, uint8_t precision) {
+    uint8_t bucketBits = precision;
+    uint8_t valueBits = 64 - bucketBits;
+    uint64_t numberOfBuckets = 1UL << bucketBits;
+
+    uint64_t ret = 0;
+
     if(format == Format::NORMAL) {
       ret = numberOfBuckets;
 

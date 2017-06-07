@@ -37,15 +37,15 @@ class Hll {
   }
 
 public:
-  Hll(uint8_t bucketBits, uint8_t lcBits) :
-      hll(bucketBits),
+  Hll(uint8_t bucketBits, uint8_t lcBits, uint8_t* synopsis = nullptr) :
+      hll(bucketBits, synopsis),
       linearCounting(lcBits) {
     // Google's paper suggests to set the threshold to this value
    this -> biasCorrectedThreshold = hll.getNumberOfBuckets()*5;
    this -> lcThreshold = linearCounting.getLinearCountingThreshold(bucketBits);
   }
 
-  Hll(uint8_t bucketBits) : Hll(bucketBits, bucketBits-4) {}
+  Hll(uint8_t bucketBits, uint8_t* synopsis = nullptr) : Hll(bucketBits, bucketBits-4, synopsis) {}
 
   void deserialize(const char* byteArray, Format format) {
     HLLHdr hdr = *(reinterpret_cast<const HLLHdr*>(byteArray));
@@ -111,8 +111,20 @@ public:
     linearCounting.add(H()(value));
   }
 
-  uint32_t getSynopsisSize(Format format) {
-    return hll.getSynopsisSize(format) + sizeof(HLLHdr);
+  uint64_t getDeserializedSynopsisSize() {
+    return this->hll.getDeserializedSynopsisSize();
+  }
+
+  static uint64_t getDeserializedSynopsisSize(uint8_t precision) {
+      return HllRaw<T,H>::getDeserializedSynopsisSize(precision);
+  }
+
+  uint64_t getSerializedSynopsisSize(Format format) {
+    return this->hll.getSerializedSynopsisSize(format) + sizeof(HLLHdr);
+  }
+
+  static uint64_t getSerializedSynopsisSize(Format format, uint8_t precision) {
+    return HllRaw<T,H>::getSerializedSynopsisSize(format, precision) + sizeof(HLLHdr);
   }
 
 /**

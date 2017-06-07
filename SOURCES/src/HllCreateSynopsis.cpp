@@ -5,6 +5,7 @@
 
 #include "Vertica.h"
 #include "hll.hpp"
+//#include "hll_aggregate_function.hpp"
 #include "hll_vertica.hpp"
 
 
@@ -12,17 +13,26 @@ class HllCreateSynopsis : public AggregateFunction
 {
 
   vint hllLeadingBits;
-  uint64_t synopsisSize;
+  uint64_t serializedSynopsisSize, deserializedSynopsisSize;
   Format format;
+  uint8_t* synopsis1, *synopsis2;
+
 
 public:
 
-  virtual void initAggregate(ServerInterface &srvInterface, IntermediateAggs &aggs)
-  {
+  virtual void setup(ServerInterface& srvInterface, const SizedColumnTypes& argTypes) {
     this -> hllLeadingBits = readSubStreamBits(srvInterface);
     this -> format = readSerializationFormat(srvInterface);
-    HLL initialHll(hllLeadingBits);
-    this -> synopsisSize = initialHll.getSynopsisSize(format);
+    this -> deserializedSynopsisSize =  Hll<uint64_t>::getDeserializedSynopsisSize(hllLeadingBits);
+    this -> serializedSynopsisSize = Hll<uint64_t>::getSerializedSynopsisSize(format, hllLeadingBits);
+
+    synopsis1 = vt_allocArray(srvInterface.allocator, uint8_t, deserializedSynopsisSize);
+    synopsis2 = vt_allocArray(srvInterface.allocator, uint8_t, deserializedSynopsisSize);
+  }
+
+  virtual void initAggregate(ServerInterface &srvInterface, IntermediateAggs &aggs)
+  {
+    HLL initialHll(hllLeadingBits, this->synopsis1);
     try {
       initialHll.serialize(aggs.getStringRef(0).data(), format);
     } catch(SerializationError& e) {
@@ -34,7 +44,7 @@ public:
                  BlockReader &argReader,
                  IntermediateAggs &aggs)
   {
-    HLL outputHll(hllLeadingBits);
+    HLL outputHll(hllLeadingBits, synopsis1);
     try {
       outputHll.deserialize(aggs.getStringRef(0).data(), format);
       do {
@@ -51,11 +61,11 @@ public:
                        IntermediateAggs &aggs,
                        MultipleIntermediateAggs &aggsOther)
   {
-    HLL outputHll(hllLeadingBits);
+    HLL outputHll(hllLeadingBits, synopsis1);
     try {
       outputHll.deserialize(aggs.getStringRef(0).data(), format );
       do {
-        HLL currentSynopsis(hllLeadingBits);
+        HLL currentSynopsis(hllLeadingBits, synopsis2);
         currentSynopsis.deserialize(aggsOther.getStringRef(0).data(), format);
         outputHll.add(currentSynopsis);
       } while (aggsOther.next());
@@ -69,7 +79,7 @@ public:
                          BlockWriter &resWriter,
                          IntermediateAggs &aggs)
   {
-    resWriter.getStringRef().copy(aggs.getStringRef(0).data(), synopsisSize);
+    resWriter.getStringRef().copy(aggs.getStringRef(0).data(), serializedSynopsisSize);
     resWriter.next();
   }
 
@@ -84,9 +94,9 @@ class HllCreateSynopsisFactory : public AggregateFunctionFactory
                                     const SizedColumnTypes &inputTypes,
                                     SizedColumnTypes &intermediateTypeMetaData)
   {
-    HLL dummy(readSubStreamBits(srvInterface));
     Format format = readSerializationFormat(srvInterface);
-    intermediateTypeMetaData.addVarbinary(dummy.getSynopsisSize(format));
+    uint8_t precision = readSubStreamBits(srvInterface);
+    intermediateTypeMetaData.addVarbinary(Hll<uint64_t>::getSerializedSynopsisSize(format, precision));
   }
 
 
@@ -102,9 +112,9 @@ class HllCreateSynopsisFactory : public AggregateFunctionFactory
                              const SizedColumnTypes &inputTypes,
                              SizedColumnTypes &outputTypes)
   {
-    HLL dummy(readSubStreamBits(srvInterface));
     Format format = readSerializationFormat(srvInterface);
-    outputTypes.addVarbinary(dummy.getSynopsisSize(format));
+    uint8_t precision = readSubStreamBits(srvInterface);
+    outputTypes.addVarbinary(Hll<uint64_t>::getSerializedSynopsisSize(format, precision));
   }
 
   virtual AggregateFunction *createAggregateFunction(ServerInterface &srvInterface)

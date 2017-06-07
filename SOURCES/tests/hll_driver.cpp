@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
   // depending on the precision and format chosen, the output vector (aka synopsis)
   // will have different size
-  auto synopsisSize = hll.getSynopsisSize(format);
+  auto synopsisSize = hll.getSerializedSynopsisSize(format);
   char outputArray[synopsisSize];
 
   // It's the users responsability to use a

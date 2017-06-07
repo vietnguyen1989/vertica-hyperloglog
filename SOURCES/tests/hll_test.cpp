@@ -59,7 +59,7 @@ TEST_F(HllTest, TestSerializeDeserialize6Bits) {
     for(uint64_t id: ids) {
       hll.add(id);
     }
-    uint32_t length = hll.getSynopsisSize(Format::COMPACT_6BITS);
+    uint32_t length = hll.getSerializedSynopsisSize(Format::COMPACT_6BITS);
 
     std::unique_ptr<char[]> byte_array(new char[length]);
     hll.serialize(byte_array.get(), Format::COMPACT_6BITS);
@@ -94,7 +94,7 @@ TEST_F(HllTest, TestSerializeDeserialize5Bits) {
     for(uint64_t id: ids) {
       hll.add(id);
     }
-    uint32_t length = hll.getSynopsisSize(Format::COMPACT_5BITS);
+    uint32_t length = hll.getSerializedSynopsisSize(Format::COMPACT_5BITS);
 
     std::unique_ptr<char[]> byte_array(new char[length]);
     hll.serialize(byte_array.get(), Format::COMPACT_5BITS);
@@ -134,7 +134,7 @@ TEST_F(HllTest, TestSerializeDeserialize5BitsToFile) {
       hll.add(id);
     }
 
-    uint32_t length = hll.getSynopsisSize(Format::COMPACT_5BITS);
+    uint32_t length = hll.getSerializedSynopsisSize(Format::COMPACT_5BITS);
     std::unique_ptr<char[]> byte_array(new char[length]);
     hll.serialize(byte_array.get(), Format::COMPACT_5BITS);
     std::ofstream temp_file_out("/tmp/tmp1", std::ios::binary | std::ios::out);
@@ -173,7 +173,7 @@ TEST_F(HllTest, TestSerializeDeserialize4BitsToFile) {
       hll.add(id);
     }
 
-    uint32_t length = hll.getSynopsisSize(Format::COMPACT_4BITS);
+    uint32_t length = hll.getSerializedSynopsisSize(Format::COMPACT_4BITS);
     std::unique_ptr<char[]> byte_array(new char[length]);
     hll.serialize(byte_array.get(), Format::COMPACT_4BITS);
     std::ofstream temp_file_out("tmp1", std::ios::binary | std::ios::out);
@@ -207,7 +207,7 @@ TEST_F(HllTest, TestWrongParametersSerializationThrowsError) {
     hll.add(id);
   }
 
-  uint32_t length = hll.getSynopsisSize(Format::COMPACT_6BITS);
+  uint32_t length = hll.getSerializedSynopsisSize(Format::COMPACT_6BITS);
   std::unique_ptr<char[]> byte_array(new char[length]);
   hll.serialize(byte_array.get(), Format::COMPACT_6BITS);
 
