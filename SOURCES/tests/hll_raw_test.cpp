@@ -60,6 +60,27 @@ public:
 };
 
 
+TEST_F(HllRawTest, TestEstimateIsCorrectForBigBuckets) {
+  HllRaw<uint64_t> hll(12);
+  HllRaw<uint64_t> hll2(12);
+  //number of buckets is always divisible by 4
+  for(uint32_t i=0; i<hll.getNumberOfBuckets(); i+=4) {
+    hll.setBucketValue(i, 4);
+    hll.setBucketValue(i+1, 5);
+    hll.setBucketValue(i+2, 6);
+    hll.setBucketValue(i+3, 7);
+
+    hll2.setBucketValue(i, 4);
+    hll2.setBucketValue(i+1, 5);
+    hll2.setBucketValue(i+2, 6);
+    hll2.setBucketValue(i+3, 7);
+  }
+  // 32 would overflow unsigned int.
+  // This was the problem with Opera data.
+  hll2.setBucketValue(0, 32);
+  EXPECT_GE(hll2.estimate(), hll.estimate());
+}
+
 /**
  * This test checks serialization and deserialization in the 6-bits format, i.e.
  * where 4 buckets are compressed to 3 bytes. An instance of HllRaw is serialized

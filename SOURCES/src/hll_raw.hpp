@@ -301,7 +301,8 @@ public:
     }
     for (uint64_t i = 0; i < numberOfBuckets; i++)
     {
-        harmonicMean += 1.0 / (1 << (synopsis[i]));
+        uint64_t numerator = 1UL << (synopsis[i]);
+        harmonicMean += 1.0 / numerator;
     }
     harmonicMean = numberOfBuckets / harmonicMean;
     // std::llround returns a long long
