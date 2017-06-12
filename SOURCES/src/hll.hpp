@@ -111,6 +111,9 @@ public:
     linearCounting.add(H()(value));
   }
 
+  void printBuckets() const {
+    hll.printBuckets();
+  }
   uint64_t getDeserializedSynopsisSize() {
     return this->hll.getDeserializedSynopsisSize();
   }

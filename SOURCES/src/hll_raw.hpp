@@ -191,6 +191,10 @@ public:
     this->add(other.synopsis);
   }
 
+  void setBucketValue(const uint32_t bucket_idx, const uint8_t val) {
+    synopsis[bucket_idx] = val;
+  }
+
   uint8_t getBucketBits() const {
     return bucketBits;
   }
@@ -250,6 +254,14 @@ public:
       emptyBuckets += static_cast<uint32_t>(synopsis[i] == 0);
     }
     return emptyBuckets;
+  }
+
+  void printBuckets() const {
+    for (uint64_t i = 0; i < numberOfBuckets; i++)
+    {
+        std::cout << 0+synopsis[i] << " ";
+    }
+    std::cout << std::endl;
   }
 
   /**
