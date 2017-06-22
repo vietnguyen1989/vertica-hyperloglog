@@ -145,7 +145,7 @@ class HllDistinctCountFactory : public AggregateFunctionFactory
 RegisterFactory(HllDistinctCountFactory);
 RegisterLibrary("Criteo", // author
                 "", // lib_build_tag
-                "0.5", // lib_version
+                "0.6", // lib_version
                 "7.2.1", // lib_sdk_version
                 "https://github.com/criteo/vertica-hyperloglog", // URL
                 "HyperLogLog implementation as User Defined Aggregate Functions", // description
