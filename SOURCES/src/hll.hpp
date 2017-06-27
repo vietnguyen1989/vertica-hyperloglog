@@ -1,4 +1,5 @@
 #include "hll_raw.hpp"
+#include <bitset>
 #include <exception>
 
 #ifndef _HLL_H_
@@ -49,9 +50,20 @@ public:
 
   void deserialize(const char* byteArray, Format format) {
     HLLHdr hdr = *(reinterpret_cast<const HLLHdr*>(byteArray));
-    if(hdr.format != formatToCode(format))
-      throw SerializationError("Requested serialization format is not the same as format"
-        " in the synopsis' header.");
+    if(hdr.magic[0] != 'H' || hdr.magic[1] != 'L') {
+      throw SerializationError("Provided synopsis seems to be incorrect (magic constant mismatch)");
+    }
+    if(hdr.format != formatToCode(format)) {
+      std::string msg = std::string("Requested serialization format is not the same as format"
+        " in the synopsis' header: ") + std::to_string((unsigned char)hdr.format) + " vs " + std::to_string(formatToCode(format));
+      msg += "\nHeader:\n";
+      for(uint8_t i=0; i<sizeof(HLLHdr); ++i) {
+        std::bitset<8> hdrbits((reinterpret_cast<char*>(&hdr) )[i]);
+        msg += hdrbits.to_string();
+        msg += " ";
+      }
+      throw SerializationError(msg.c_str()) ;
+    }
 
     const char* byteArrayHll = byteArray + sizeof(HLLHdr);
     if(format == Format::NORMAL) {
