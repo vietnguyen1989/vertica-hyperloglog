@@ -21,8 +21,8 @@ BuildRequires:  dialog
 
 # this assumes that vertica is available in a yum repository
 # this is the case at Criteo, because Jeremy Mauro put it there
-BuildRequires:  vertica
-Requires:       vertica
+BuildRequires:  vertica-server
+Requires:       vertica-server
 
 %description
 For complete documentation, see the project home page on GitHub under http://github.com/criteo/vertica-hyperloglog.
@@ -46,5 +46,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %check
 make check # this runs the unit tests
+
+%post
+/usr/bin/sudo -u vertica /bin/vsql -c "SET ROLE pseudosuperuser;\
+	CREATE OR REPLACE LIBRARY HllLib AS '/opt/vertica/lib/libhll.so';\
+	CREATE OR REPLACE AGGREGATE FUNCTION HllCreateSynopsis AS LANGUAGE 'C++' NAME 'HllCreateSynopsisFactory' LIBRARY HllLib;\
+	GRANT EXECUTE ON AGGREGATE FUNCTION HllCreateSynopsis(BIGINT) TO PUBLIC;\
+	CREATE OR REPLACE AGGREGATE FUNCTION HllDistinctCount AS LANGUAGE 'C++' NAME 'HllDistinctCountFactory' LIBRARY HllLib;\
+	GRANT EXECUTE ON AGGREGATE FUNCTION HllDistinctCount(VARBINARY) TO PUBLIC;"
 
 %changelog
